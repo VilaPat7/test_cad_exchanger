@@ -8,9 +8,9 @@ import * as THREE from "three";
 import { useRef } from "react";
 import { useFrame } from "@react-three/fiber";
 
-
 const randomColor = () => `#${Math.floor(Math.random() * 16777215).toString(16)}`;
 const randomPosition = () => [(Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5, (Math.random() - 0.5) * 5];
+
 const Primitive = ({ type, dimensions, color, position, onClick, isSelected }) => {
   const meshRef = useRef();
   const edgesRef = useRef();
@@ -31,6 +31,19 @@ const Primitive = ({ type, dimensions, color, position, onClick, isSelected }) =
         )}
         <meshStandardMaterial color={color} />
       </mesh>
+      {isSelected && (
+        <lineSegments>
+          <edgesGeometry
+            attach="geometry"
+            args={
+              type === "box"
+                ? [new THREE.BoxGeometry(dimensions.width, dimensions.height, dimensions.length)]
+                : [new THREE.ConeGeometry(dimensions.width / 2, dimensions.height, 4)]
+            }
+          />
+          <lineBasicMaterial attach="material" color="red" linewidth={3} />
+        </lineSegments>
+      )}
 
       <lineSegments ref={edgesRef}>
         <edgesGeometry attach="geometry" args={type === "box" ? [new THREE.BoxGeometry(dimensions.width, dimensions.height, dimensions.length)] : [new THREE.ConeGeometry(dimensions.width / 2, dimensions.height, 4)]} />
@@ -39,7 +52,6 @@ const Primitive = ({ type, dimensions, color, position, onClick, isSelected }) =
     </group>
   );
 };
-
 
 const App = () => {
   const [primitives, setPrimitives] = useState([]);
@@ -52,12 +64,13 @@ const App = () => {
   const [selectedId, setSelectedId] = useState(null);
 
   const addPrimitives = () => {
-    const newPrimitives = Array.from({ length: count }, () => ({
+    const newPrimitives = Array.from({ length: count }, (_, index) => ({
       id: uuidv4(),
       type,
       dimensions: { length, width, height },
       color: randomColor(),
       position: randomPosition(),
+      index: primitives.length + index + 1,
     }));
 
     setPrimitives((prev) => [...prev, ...newPrimitives]);
@@ -70,23 +83,30 @@ const App = () => {
   };
 
   return (
-    <Box display="flex" height="100vh" width="100vh">
-      <Box width="300px" p={2} bgcolor="#f4f4f4">
-        <Typography variant="h6" color="black">List of primitive groups</Typography>
-        <Box mt={2}>
+    <Box display="flex" height="100vh" width="100%">
+    
+      <Box width="300px" p={2} bgcolor="#f4f4f4" display="flex" flexDirection="column">
+        <Typography variant="h6" color="black">List of groups</Typography>
+
+        
+        <Box mt={2} flex={1} sx={{ maxHeight: "70vh", overflowY: "auto" }}>
           {primitives.map((prim) => (
             <Box
               key={prim.id}
               p={1}
               bgcolor={prim.id === selectedId ? "#ddd" : "#fff"}
-              border="1px solid #black"
+              border="1px solid black"
               mt={1}
               onClick={() => setSelectedId(prim.id)}
-              sx={{ cursor: "pointer" }}
+              sx={{ cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between" }}
             >
-              {/* ({prim.dimensions.width}x{prim.dimensions.height}x{prim.dimensions.length}) */}
-              <Typography color="black" variant="body2">{prim.type.toUpperCase()} </Typography>
-              {/* <Typography color="black" variant="body2">Color: {prim.color}</Typography> */}
+             
+              <Box>
+              <Typography color="black" variant="body2">{prim.type.toUpperCase()} {prim.index}</Typography>
+              <Typography color="black" variant="body2">
+              position: ({prim.position.map(p => p.toFixed(1)).join(", ")})
+              </Typography>
+              </Box>
               <Box
                 sx={{
                   width: 20,
@@ -94,15 +114,20 @@ const App = () => {
                   backgroundColor: prim.color,
                   border: "1px solid black",
                   borderRadius: "4px",
-                  ml: 2,
                 }}
               />
-              <Typography color="black" variant="body2">Pos: [{prim.position.map(p => p.toFixed(1)).join(", ")}]</Typography>
             </Box>
           ))}
         </Box>
-        <Button variant="contained" onClick={() => setOpen(true)} fullWidth>Add Group</Button>
-        <Button variant="contained" color="error" onClick={clearScene} fullWidth sx={{ mt: 1 }}>Clear Scene</Button>
+
+        <Box mt={2} display="flex" flexDirection="column" justifyContent="flex-end">
+          <Button variant="outlined" fullWidth onClick={() => setOpen(true)} sx={{ bgcolor: "white", color: "black", border: "1px solid black" }}>
+            Add Group
+          </Button>
+          <Button variant="outlined" fullWidth onClick={clearScene} sx={{ mt: 1, bgcolor: "white", color: "black", border: "1px solid black" }}>
+            Clear Scene
+          </Button>
+        </Box>
       </Box>
 
       <Box bgcolor="white" flex={1}>
@@ -119,13 +144,14 @@ const App = () => {
               color={prim.color}
               position={prim.position}
               isSelected={prim.id === selectedId}
-              onClick={setSelectedId}
+              onClick={() => setSelectedId(prim.id)}
             />
           ))}
         </Canvas>
       </Box>
+
       <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>Add Group</DialogTitle>
+        <DialogTitle>Add primitives Group</DialogTitle>
         <DialogContent>
           <Select fullWidth value={type} onChange={(e) => setType(e.target.value)} sx={{ mt: 2 }}>
             <MenuItem value="box">Box</MenuItem>
@@ -137,8 +163,8 @@ const App = () => {
           <TextField label="Count" type="number" fullWidth value={count} onChange={(e) => setCount(Number(e.target.value))} sx={{ mt: 2 }} />
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={addPrimitives}>Add</Button>
+          <Button onClick={() => setOpen(false)} sx={{ color: "black" }}>Cancel</Button>
+          <Button onClick={addPrimitives} sx={{ color: "black" }}>Add</Button>
         </DialogActions>
       </Dialog>
     </Box>
