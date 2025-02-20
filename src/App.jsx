@@ -23,7 +23,6 @@ const Primitive = ({ type, dimensions, color, position, onClick, isSelected }) =
 
   return (
     <group position={position} onClick={onClick} scale={isSelected ? 1.2 : 1}>
-      {/* Основная фигура */}
       <mesh ref={meshRef}>
         {type === "box" ? (
           <boxGeometry args={[dimensions.width, dimensions.height, dimensions.length]} />
@@ -33,7 +32,6 @@ const Primitive = ({ type, dimensions, color, position, onClick, isSelected }) =
         <meshStandardMaterial color={color} />
       </mesh>
 
-      {/* Грани (чёрные линии) */}
       <lineSegments ref={edgesRef}>
         <edgesGeometry attach="geometry" args={type === "box" ? [new THREE.BoxGeometry(dimensions.width, dimensions.height, dimensions.length)] : [new THREE.ConeGeometry(dimensions.width / 2, dimensions.height, 4)]} />
         <lineBasicMaterial attach="material" color="black" />
@@ -73,11 +71,8 @@ const App = () => {
 
   return (
     <Box display="flex" height="100vh" width="100vh">
-      {/* UI Panel */}
       <Box width="300px" p={2} bgcolor="#f4f4f4">
-        <Typography variant="h6" color="black">Primitives List</Typography>
-        <Button variant="contained" onClick={() => setOpen(true)} fullWidth>Add Primitives</Button>
-        <Button variant="contained" color="error" onClick={clearScene} fullWidth sx={{ mt: 1 }}>Clear Scene</Button>
+        <Typography variant="h6" color="black">List of primitive groups</Typography>
         <Box mt={2}>
           {primitives.map((prim) => (
             <Box
@@ -89,16 +84,28 @@ const App = () => {
               onClick={() => setSelectedId(prim.id)}
               sx={{ cursor: "pointer" }}
             >
-              <Typography color="black" variant="body2">{prim.type.toUpperCase()} ({prim.dimensions.width}x{prim.dimensions.height}x{prim.dimensions.length})</Typography>
-              <Typography color="black" variant="body2">Color: {prim.color}</Typography>
+              {/* ({prim.dimensions.width}x{prim.dimensions.height}x{prim.dimensions.length}) */}
+              <Typography color="black" variant="body2">{prim.type.toUpperCase()} </Typography>
+              {/* <Typography color="black" variant="body2">Color: {prim.color}</Typography> */}
+              <Box
+                sx={{
+                  width: 20,
+                  height: 20,
+                  backgroundColor: prim.color,
+                  border: "1px solid black",
+                  borderRadius: "4px",
+                  ml: 2,
+                }}
+              />
               <Typography color="black" variant="body2">Pos: [{prim.position.map(p => p.toFixed(1)).join(", ")}]</Typography>
             </Box>
           ))}
         </Box>
+        <Button variant="contained" onClick={() => setOpen(true)} fullWidth>Add Group</Button>
+        <Button variant="contained" color="error" onClick={clearScene} fullWidth sx={{ mt: 1 }}>Clear Scene</Button>
       </Box>
 
-      {/* 3D Scene */}
-      <Box flex={1}>
+      <Box bgcolor="white" flex={1}>
         <Canvas camera={{ position: [0, 3, 5] }}>
           <ambientLight />
           <pointLight position={[10, 10, 10]} />
@@ -117,10 +124,8 @@ const App = () => {
           ))}
         </Canvas>
       </Box>
-
-      {/* Add Primitive Dialog */}
       <Dialog open={open} onClose={() => setOpen(false)}>
-        <DialogTitle>Add Primitives</DialogTitle>
+        <DialogTitle>Add Group</DialogTitle>
         <DialogContent>
           <Select fullWidth value={type} onChange={(e) => setType(e.target.value)} sx={{ mt: 2 }}>
             <MenuItem value="box">Box</MenuItem>
