@@ -41,7 +41,7 @@ const Primitive = ({ type, dimensions, color, position, onClick, isSelected }) =
                 : [new THREE.ConeGeometry(dimensions.width / 2, dimensions.height, 4)]
             }
           />
-          <lineBasicMaterial attach="material" color="red" linewidth={3} />
+          <lineBasicMaterial attach="material" color="green" linewidth={3} />
         </lineSegments>
       )}
 
